@@ -6,7 +6,7 @@
 	to show how, using threads, an incorrect result could be observed.  You
 	may need to run this multiple times to see an incorrect temp value.
 
-  To compile this, do: g++ -lpthread thread-collision
+  To compile this, do: g++ -lpthread thread-collision.cpp
 */
 
 #include <iostream>
@@ -15,15 +15,15 @@
 
 using namespace std;
 
-const int NUM_THREADS = 100;
-const int NUM_LOOPS = 1000000;
+const int NUM_THREADS = 10;
+const int NUM_LOOPS = 100000;
 
 struct thread_data_t{
   int thread_id;
   int value;
 };
 
-int temp;
+unsigned long temp;
 
 void* doStuff(void* arg){
   thread_data_t* input;
