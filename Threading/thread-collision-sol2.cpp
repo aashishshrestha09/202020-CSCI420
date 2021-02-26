@@ -2,11 +2,12 @@
   Name: Paul Talaga
   Date: Oct 30, 2017
   Desc: Program to demonstrate the use of pthreads
-        This reads and writes to a shared variable (without any semaphore or lock)
-	to show how, using threads, an incorrect result could be observed.  You
-	may need to run this multiple times to see an incorrect temp value.
+        This is another solution to the shared variable access issue.
+        All threads still update a single global variable, but they are forced to take
+        turns via a mutex.  A mutex is a type of lock where only one thread can have the
+        lock at a time, which forces all others to wait (block) until the lock is released.
 
-  To compile this, do: g++ -lpthread thread-collision.cpp
+  To compile this, do: g++ -lpthread thread-collision-sol2.cpp
 */
 
 #include <iostream>
@@ -23,6 +24,9 @@ struct thread_data_t{
   int value;
 };
 
+pthread_mutex_t lock;   // mutexes come in the pthread library since they're used with threads
+    // This MUST be global so all threads have access to it.
+
 unsigned long temp;
 
 void* doStuff(void* arg){
@@ -31,9 +35,12 @@ void* doStuff(void* arg){
 
   int thread_num = input->thread_id;
   int v = input->value;
-  // To increase the likelyhood of an incorrect calculation of a shared variable, we do it a lot!
+
   for(int i = 0; i < NUM_LOOPS; i++){
+    // This locking/unlocking makes sure only one thread is dong the code between, thus the incorrect math can't occur
+    pthread_mutex_lock(&lock);
     temp = temp + 1;
+    pthread_mutex_unlock(&lock);
     //temp++;
   }
   cout << "Thread #: " << thread_num << " value: " << v << " temp " << temp << endl;
@@ -46,6 +53,8 @@ void* doStuff(void* arg){
 int main(){
 
   temp = 0;
+
+  pthread_mutex_init(&lock, NULL); 
 
   thread_data_t passed[NUM_THREADS];
   pthread_t threads[NUM_THREADS];
@@ -68,6 +77,7 @@ int main(){
 
   cout << "temp (should be "<< NUM_THREADS * NUM_LOOPS << "): " << temp << endl;
   pthread_attr_destroy(&attr);
+  pthread_mutex_destroy(&lock);
 
   return 0;
 

@@ -2,11 +2,10 @@
   Name: Paul Talaga
   Date: Oct 30, 2017
   Desc: Program to demonstrate the use of pthreads
-        This reads and writes to a shared variable (without any semaphore or lock)
-	to show how, using threads, an incorrect result could be observed.  You
-	may need to run this multiple times to see an incorrect temp value.
+        This is one way to deal with multiple threads reading/writing a shared variable,
+        DONE DO IT!  Each thread keep track of its own work and report back when done.
 
-  To compile this, do: g++ -lpthread thread-collision.cpp
+  To compile this, do: g++ -lpthread thread-collision-sol1.cpp
 */
 
 #include <iostream>
@@ -21,9 +20,10 @@ const int NUM_LOOPS = 100000;
 struct thread_data_t{
   int thread_id;
   int value;
+  int ret;
 };
 
-unsigned long temp;
+//unsigned long temp;
 
 void* doStuff(void* arg){
   thread_data_t* input;
@@ -31,11 +31,11 @@ void* doStuff(void* arg){
 
   int thread_num = input->thread_id;
   int v = input->value;
-  // To increase the likelyhood of an incorrect calculation of a shared variable, we do it a lot!
+  int temp = 0;
   for(int i = 0; i < NUM_LOOPS; i++){
     temp = temp + 1;
-    //temp++;
   }
+  input->ret = temp;
   cout << "Thread #: " << thread_num << " value: " << v << " temp " << temp << endl;
 
   return NULL;
@@ -45,7 +45,7 @@ void* doStuff(void* arg){
 
 int main(){
 
-  temp = 0;
+  //temp = 0;
 
   thread_data_t passed[NUM_THREADS];
   pthread_t threads[NUM_THREADS];
@@ -60,13 +60,14 @@ int main(){
     pthread_create(&threads[i], &attr, doStuff, (void*)&passed[i]);
   }
 
-
+  int total = 0;
   for(int i = 0; i < NUM_THREADS; i++){
     pthread_join(threads[i], NULL);
-    cout << "Thread " << i << " done." << endl;
+    cout << "Thread " << i << " done." <<  passed[i].ret << endl;
+    total = total + passed[i].ret;
   }
 
-  cout << "temp (should be "<< NUM_THREADS * NUM_LOOPS << "): " << temp << endl;
+  cout << "temp (should be "<< NUM_THREADS * NUM_LOOPS << "): " << total << endl;
   pthread_attr_destroy(&attr);
 
   return 0;

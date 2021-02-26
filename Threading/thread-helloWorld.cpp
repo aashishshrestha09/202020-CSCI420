@@ -2,11 +2,9 @@
   Name: Paul Talaga
   Date: Oct 30, 2017
   Desc: Program to demonstrate the use of pthreads
-        This reads and writes to a shared variable (without any semaphore or lock)
-	to show how, using threads, an incorrect result could be observed.  You
-	may need to run this multiple times to see an incorrect temp value.
+        It prints various strings to the screen.
 
-  To compile this, do: g++ -lpthread thread-collision.cpp
+  To compile this, do: g++ -lpthread thread-helloWorld.cpp
 */
 
 #include <iostream>
@@ -15,12 +13,12 @@
 
 using namespace std;
 
-const int NUM_THREADS = 10;
+const int NUM_THREADS = 3;
 const int NUM_LOOPS = 100000;
 
 struct thread_data_t{
   int thread_id;
-  int value;
+  string name;
 };
 
 unsigned long temp;
@@ -30,14 +28,9 @@ void* doStuff(void* arg){
   input = (thread_data_t*)arg;
 
   int thread_num = input->thread_id;
-  int v = input->value;
-  // To increase the likelyhood of an incorrect calculation of a shared variable, we do it a lot!
-  for(int i = 0; i < NUM_LOOPS; i++){
-    temp = temp + 1;
-    //temp++;
-  }
-  cout << "Thread #: " << thread_num << " value: " << v << " temp " << temp << endl;
-
+  string name = input->name;
+  
+  cout << "Hello " << name << endl;
   return NULL;
 }
 
@@ -54,19 +47,28 @@ int main(){
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-  for(int i = 0; i < NUM_THREADS; i++){
-    passed[i].thread_id = i;
-    passed[i].value = 55;
-    pthread_create(&threads[i], &attr, doStuff, (void*)&passed[i]);
-  }
+  passed[0].thread_id = 0;
+  passed[0].name = "Bob";
+  //doStuff(&passed);
+  pthread_create(&threads[0], &attr, doStuff, (void*)&passed[0]);
 
+  passed[1].thread_id = 1;
+  passed[1].name = "Billy";
+  //doStuff(&passed);
+  pthread_create(&threads[1], &attr, doStuff, (void*)&passed[1]);
+
+  passed[2].thread_id = 2;
+  passed[2].name = "Greg";
+  //doStuff(&passed);
+  pthread_create(&threads[2], &attr, doStuff, (void*)&passed[2]);
+  
+  cout << "All threads started." << endl;
 
   for(int i = 0; i < NUM_THREADS; i++){
     pthread_join(threads[i], NULL);
     cout << "Thread " << i << " done." << endl;
   }
 
-  cout << "temp (should be "<< NUM_THREADS * NUM_LOOPS << "): " << temp << endl;
   pthread_attr_destroy(&attr);
 
   return 0;
