@@ -10,11 +10,14 @@ import threading
 
 def listen_worker(s):
   print("Waiting for message")
-  while True:
-    rcv = s.recv(1024)
-    #print("Got: {}".format(rcv.decode('ascii')))
-    print()
-    print(rcv.decode('ascii'))
+  try:
+     while True:
+        rcv = s.recv(1024)
+        #print("Got: {}".format(rcv.decode('ascii')))
+        print()
+        print(rcv.decode('ascii'))
+  except:
+      s.close()
 
 port = 5555 #  Send to port above 1024
 
